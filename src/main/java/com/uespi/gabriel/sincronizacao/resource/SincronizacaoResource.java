@@ -72,4 +72,11 @@ public class SincronizacaoResource {
     public String buscarClockLogico() {
         return sincronizacaoService.buscarClockLogico().toString();
     }
+
+    @GET
+    @Path("/limparEstados")
+    public Response limparTudo() {
+        sincronizacaoService.limparTudo();
+        return Response.ok().build();
+    }
 }

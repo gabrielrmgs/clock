@@ -15,6 +15,8 @@
             --primary: #1769aa;
             --primary-dark: #104f81;
             --danger: #b42318;
+            --success: #147a4b;
+            --warning: #9a6700;
         }
 
         * {
@@ -51,11 +53,19 @@
             color: var(--muted);
         }
 
+        .topo {
+            display: flex;
+            align-items: end;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
         .layout {
             display: grid;
             grid-template-columns: 360px 1fr;
             gap: 20px;
-            margin-top: 28px;
+            margin-top: 20px;
             align-items: start;
         }
 
@@ -107,6 +117,11 @@
             background: var(--primary-dark);
         }
 
+        button:disabled {
+            cursor: not-allowed;
+            opacity: 0.55;
+        }
+
         button.secondary {
             color: var(--primary);
             background: #e8f2fb;
@@ -121,10 +136,20 @@
             background: #fff0ee;
         }
 
+        button.danger:hover {
+            background: #ffe1de;
+        }
+
         .actions {
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
+        }
+
+        .painel {
+            display: grid;
+            gap: 12px;
+            margin-top: 20px;
         }
 
         .cliente {
@@ -146,12 +171,12 @@
         .status {
             display: grid;
             gap: 12px;
-            margin-top: 20px;
+            margin-top: 0;
         }
 
         .status-grid {
             display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
+            grid-template-columns: repeat(4, minmax(0, 1fr));
             gap: 12px;
         }
 
@@ -166,6 +191,36 @@
             display: block;
             margin-top: 6px;
             font-size: 1.35rem;
+        }
+
+        .metric small {
+            display: block;
+            margin-top: 4px;
+            color: var(--muted);
+        }
+
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            min-height: 30px;
+            border-radius: 999px;
+            padding: 0 12px;
+            color: var(--warning);
+            background: #fff6df;
+            font-weight: 700;
+        }
+
+        .chip.pronto {
+            color: var(--success);
+            background: #e1f5e9;
+        }
+
+        .fila-info {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            color: var(--muted);
         }
 
         table {
@@ -188,14 +243,45 @@
             text-transform: uppercase;
         }
 
+        tbody tr:first-child td {
+            background: #eef7f1;
+        }
+
+        tbody tr:first-child .prioridade {
+            color: #ffffff;
+            background: var(--success);
+        }
+
+        .prioridade {
+            display: inline-flex;
+            min-width: 34px;
+            height: 28px;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            color: #0f5132;
+            background: #dff3e6;
+            font-weight: 700;
+        }
+
         .mensagem {
             min-height: 22px;
             color: var(--muted);
             font-weight: 700;
         }
 
+        .mensagem.sucesso {
+            color: var(--success);
+        }
+
         .erro {
             color: var(--danger);
+        }
+
+        .empty-state {
+            color: var(--muted);
+            text-align: center;
+            padding: 22px;
         }
 
         @media (max-width: 860px) {
@@ -209,8 +295,38 @@
 </head>
 <body>
 <main>
-    <h1>Sincronizacao de Relogios</h1>
-    <p>Crie o servidor, adicione quantos clientes precisar e sincronize tudo em uma unica tela.</p>
+    <div class="topo">
+        <div>
+            <h1>Sincronizacao de Relogios</h1>
+            <p>Servidor, clientes e fila de acesso ao recurso.</p>
+        </div>
+        <button class="danger" type="button" id="limpar-estados">Limpar estados</button>
+    </div>
+
+    <div class="painel">
+        <div class="mensagem" id="mensagem"></div>
+        <div class="status">
+            <div class="status-grid">
+                <div class="metric">
+                    <span>Estado</span>
+                    <strong id="status-estado" class="chip">Sem servidor</strong>
+                    <small id="status-acao">Crie o servidor para iniciar.</small>
+                </div>
+                <div class="metric">
+                    <span>Servidor</span>
+                    <strong id="status-servidor">--</strong>
+                </div>
+                <div class="metric">
+                    <span>Clock logico</span>
+                    <strong id="status-clock">--</strong>
+                </div>
+                <div class="metric">
+                    <span>Clientes</span>
+                    <strong id="status-clientes">0</strong>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="layout">
         <section>
@@ -230,41 +346,32 @@
                 <div id="clientes" class="clientes"></div>
                 <div class="actions">
                     <button class="secondary" type="button" id="adicionar-cliente">Adicionar cliente</button>
-                    <button type="submit">Criar clientes</button>
+                    <button type="submit" id="sincronizar-clientes">Sincronizar clientes</button>
                 </div>
             </form>
         </section>
     </div>
 
     <div class="status">
-        <div class="mensagem" id="mensagem"></div>
-        <div class="status-grid">
-            <div class="metric">
-                <span>Servidor</span>
-                <strong id="status-servidor">--</strong>
-            </div>
-            <div class="metric">
-                <span>Clock logico</span>
-                <strong id="status-clock">--</strong>
-            </div>
-            <div class="metric">
-                <span>Clientes</span>
-                <strong id="status-clientes">0</strong>
-            </div>
+        <div class="fila-info">
+            <span>Fila de acesso ao recurso</span>
+            <strong id="primeiro-cliente">Primeiro acesso: --</strong>
         </div>
 
         <table>
             <thead>
             <tr>
+                <th>Ordem</th>
                 <th>Cliente</th>
                 <th>Hora local</th>
                 <th>Hora de envio</th>
+                <th>Hora tratada</th>
                 <th>Diferenca</th>
             </tr>
             </thead>
             <tbody id="tabela-clientes">
             <tr>
-                <td colspan="4">Nenhum cliente criado.</td>
+                <td class="empty-state" colspan="6">Nenhum cliente sincronizado.</td>
             </tr>
             </tbody>
         </table>
@@ -296,7 +403,12 @@
     const statusServidorEl = document.querySelector("#status-servidor");
     const statusClockEl = document.querySelector("#status-clock");
     const statusClientesEl = document.querySelector("#status-clientes");
+    const statusEstadoEl = document.querySelector("#status-estado");
+    const statusAcaoEl = document.querySelector("#status-acao");
     const tabelaClientesEl = document.querySelector("#tabela-clientes");
+    const primeiroClienteEl = document.querySelector("#primeiro-cliente");
+    const sincronizarClientesEl = document.querySelector("#sincronizar-clientes");
+    let servidorCriado = false;
 
     function horaAtual() {
         return new Date().toTimeString().slice(0, 8);
@@ -305,6 +417,16 @@
     function mostrarMensagem(texto, erro = false) {
         mensagemEl.textContent = texto;
         mensagemEl.classList.toggle("erro", erro);
+        mensagemEl.classList.toggle("sucesso", texto && !erro);
+    }
+
+    function textoSeguro(valor) {
+        return String(valor ?? "--")
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll("\"", "&quot;")
+            .replaceAll("'", "&#039;");
     }
 
     function adicionarCliente() {
@@ -335,18 +457,35 @@
         return texto;
     }
 
+    async function chamarAcao(url) {
+        const resposta = await fetch(url);
+        const texto = await resposta.text();
+        if (!resposta.ok) {
+            throw new Error(texto || "Nao foi possivel concluir a operacao.");
+        }
+
+        return texto;
+    }
+
     async function atualizarStatus() {
         const servidorResposta = await fetch("/sd/servidor");
         if (servidorResposta.ok) {
             const servidor = await servidorResposta.json();
             statusServidorEl.textContent = servidor.horaServidor || "--";
+            servidorCriado = true;
         } else {
             statusServidorEl.textContent = "--";
+            servidorCriado = false;
         }
+
+        statusEstadoEl.textContent = servidorCriado ? "Servidor ativo" : "Sem servidor";
+        statusEstadoEl.classList.toggle("pronto", servidorCriado);
+        statusAcaoEl.textContent = servidorCriado ? "Clientes podem ser sincronizados." : "Crie o servidor para iniciar.";
+        sincronizarClientesEl.disabled = !servidorCriado;
 
         const clockResposta = await fetch("/sd/clockLogico");
         const clockTexto = await clockResposta.text();
-        statusClockEl.textContent = clockTexto && clockTexto !== "null" ? clockTexto : "--";
+        statusClockEl.textContent = servidorCriado && clockTexto && clockTexto !== "null" ? clockTexto : "--";
 
         const clientesResposta = await fetch("/sd/clientes");
         const clientes = clientesResposta.ok ? await clientesResposta.json() : [];
@@ -356,21 +495,39 @@
 
     function renderizarClientes(clientes) {
         if (!clientes.length) {
-            tabelaClientesEl.innerHTML = "<tr><td colspan=\"4\">Nenhum cliente criado.</td></tr>";
+            primeiroClienteEl.textContent = "Primeiro acesso: --";
+            tabelaClientesEl.innerHTML = "<tr><td class=\"empty-state\" colspan=\"6\">Nenhum cliente sincronizado.</td></tr>";
             return;
         }
 
-        tabelaClientesEl.innerHTML = clientes.map((cliente) => (
+        const primeiro = clientes[0];
+        primeiroClienteEl.textContent = "Primeiro acesso: " + primeiro.nomeCliente + " as " + primeiro.horaEnvioTratada;
+
+        tabelaClientesEl.innerHTML = clientes.map((cliente, indice) => (
             "<tr>" +
-            "<td>" + cliente.nomeCliente + "</td>" +
-            "<td>" + cliente.horaLocalCliente + "</td>" +
-            "<td>" + cliente.horaEnvioCliente + "</td>" +
-            "<td>" + (cliente.difHora || "--") + "</td>" +
+            "<td><span class=\"prioridade\">" + (indice + 1) + "</span></td>" +
+            "<td>" + textoSeguro(cliente.nomeCliente) + "</td>" +
+            "<td>" + textoSeguro(cliente.horaLocalCliente) + "</td>" +
+            "<td>" + textoSeguro(cliente.horaEnvioCliente) + "</td>" +
+            "<td>" + textoSeguro(cliente.horaEnvioTratada) + "</td>" +
+            "<td>" + textoSeguro(cliente.difHora) + "</td>" +
             "</tr>"
         )).join("");
     }
 
     document.querySelector("#adicionar-cliente").addEventListener("click", adicionarCliente);
+    document.querySelector("#limpar-estados").addEventListener("click", async () => {
+        try {
+            await chamarAcao("/sd/limparEstados");
+            clientesEl.innerHTML = "";
+            adicionarCliente();
+            document.querySelector("#hora-servidor").value = horaAtual();
+            mostrarMensagem("Estados limpos.");
+            await atualizarStatus();
+        } catch (erro) {
+            mostrarMensagem(erro.message, true);
+        }
+    });
 
     document.querySelector("#servidor-form").addEventListener("submit", async (event) => {
         event.preventDefault();
@@ -391,6 +548,11 @@
 
         if (!clientes.length) {
             mostrarMensagem("Adicione pelo menos um cliente.", true);
+            return;
+        }
+
+        if (!servidorCriado) {
+            mostrarMensagem("Crie o servidor antes de sincronizar clientes.", true);
             return;
         }
 

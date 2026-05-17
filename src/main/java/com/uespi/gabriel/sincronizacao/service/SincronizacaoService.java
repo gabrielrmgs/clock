@@ -3,6 +3,7 @@ package com.uespi.gabriel.sincronizacao.service;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import com.uespi.gabriel.sincronizacao.dto.ClienteRequest;
@@ -65,6 +66,8 @@ public class SincronizacaoService {
 
         calcularDiferencas();
 
+        ordenarListaClientes();
+
         return this.clientes.toString();
 
     }
@@ -76,15 +79,31 @@ public class SincronizacaoService {
             if (clockLogico.isAfter(cliente.getHoraLocalCliente())) {
 
                 int diferenca = clockLogico.toSecondOfDay() - cliente.getHoraLocalCliente().toSecondOfDay();
+                int horaAtualizadaEnvio = cliente.getHoraEnvioCliente().toSecondOfDay() + diferenca;
+                cliente.setHoraEnvioTratada(criarHoraDoDia(horaAtualizadaEnvio));
                 cliente.setDifHora("+ " + LocalTime.ofSecondOfDay(diferenca).toString());
 
             } else if (clockLogico.isBefore(cliente.getHoraLocalCliente())) {
 
                 int diferenca = cliente.getHoraLocalCliente().toSecondOfDay() - clockLogico.toSecondOfDay();
+                int horaAtualizadaEnvio = cliente.getHoraEnvioCliente().toSecondOfDay() - diferenca;
+                cliente.setHoraEnvioTratada(criarHoraDoDia(horaAtualizadaEnvio));
                 cliente.setDifHora("- " + LocalTime.ofSecondOfDay(diferenca).toString());
 
+            } else {
+                cliente.setHoraEnvioTratada(cliente.getHoraEnvioCliente());
+                cliente.setDifHora("+ 00:00");
             }
         }
+    }
+
+    public void ordenarListaClientes() {
+        this.clientes.sort(Comparator.comparing(Cliente::getHoraEnvioTratada, Comparator.nullsLast(Comparator.naturalOrder())));
+    }
+
+    private LocalTime criarHoraDoDia(int segundos) {
+        int segundosNoDia = 24 * 60 * 60;
+        return LocalTime.ofSecondOfDay(Math.floorMod(segundos, segundosNoDia));
     }
 
     public Servidor buscarServidor() {
@@ -107,5 +126,11 @@ public class SincronizacaoService {
 
     public List<Cliente> listarClientes() {
         return Collections.unmodifiableList(this.clientes);
+    }
+
+    public void limparTudo() {
+        this.servidor = null;
+        this.clockLogico = null;
+        this.clientes.clear();
     }
 }

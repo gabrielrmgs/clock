@@ -1,0 +1,11 @@
+services:
+  clock-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: clock-api:latest
+    container_name: clock-api
+    ports:
+      - "8080:8080"
+    environment:
+      JAVA_OPTS_APPEND: "-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager"
